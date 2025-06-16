@@ -67,14 +67,18 @@ if __name__ == '__main__':
 
         # turn based chat
         loop = True
+
         while loop:
             History.check_dir()
 
-            if not args.interactive: loop=False
+            if not args.interactive:
+                loop=False
             if not user_input:
                 user_input = get_input(History.HISTORY_INPUT)
 
-                if not user_input: print(); break
+                if not user_input:
+                    print()
+                    break
 
             # prompt instructions handler
             command_expand, images_locations = parse_instructions(user_input)
@@ -107,21 +111,21 @@ if __name__ == '__main__':
             print('\n---')
 
             # speech generation
-            if args.text_to_speech:
-                confirm = input('$> Proceed playback? (Y/n): ')
+            confirm = input('$> Proceed playback? (y/N): ')
+            if confirm.lower() in ('y', 'yes'):
 
-                if confirm.lower() in ('', 'y', 'yes'):
-                    try:
-                        speach_data = feline.generate_speach(response_chunks)
+                try:
+                    speach_data = feline.generate_speach(response_chunks)
                         
-                        wav_dir = str(History.CACHE_DIR)
-                        wav_name = Speech.get_wavfilename()
-                        wav_path = f'{wav_dir}/{wav_name}'
+                    wav_dir = str(History.CACHE_DIR)
+                    wav_name = Speech.get_wavfilename()
+                    wav_path = f'{wav_dir}/{wav_name}'
                     
-                        Speech.export_wav(wav_path, speach_data)
-                        Speech.play_wav(wav_path)
+                    Speech.export_wav(wav_path, speach_data)
+                    Speech.play_wav(wav_path)
 
-                    except: pass
+                except:
+                    pass
 
             user_input = ''
     else:
