@@ -7,7 +7,7 @@
 [aistudio](https://aistudio.google.com/app/apikey)
 
 - Clone the repository:
-`git clone https://github.com/vizard418/FeLine.git ~.local/share/`
+`git clone https://github.com/vizard418/FeLine.git ~/.local/share/`
 
 - Make your virtual enviroment with python on FeLine folder
 ```bash
@@ -34,27 +34,28 @@ export PATH="$PATH:~/.local/share/FeLine"
 ---
 
 ### Basic usage
-`feline [-h] [--interactive] [--clear]
+```bash
+feline [-h] [--interactive] [--clear]
                [--model {model_keyword}]
                [message ...]
 
-positional arguments:
+* positional arguments:
   message		Input prompt (not required)
 
-options:
+* options:
   -h, --help						Show this help message
   --interactive, -it				Interactive chat mode
   --clear							Clear history
   --model {keyword}, -m {keyword}	Specify model
 ---
 
-- Available Models:
+* Available Models:
     - "lite" -> faster good *default model*
     - "flash" (balanced)
     - "preview" (complex)
+```
 
-
-### How to use `$` in feline for images and shell commands:
+### How to use `$[]` in feline for images and shell commands:
 
 `feline` utilizes the `$` symbol for special instructions within your prompts.  Here's how to use it:
 
@@ -67,18 +68,19 @@ $>
 ```
 
 * **Sinlge-Line Command Prompts**
-```bash
-feline Summarize the key statements from my notes. '$(cat notes.md)'
-```
+`feline Summarize the key statements from my notes. '$(cat notes.md)'`
+
 
 *   **For Shell Command Execution:** Use `$()` around your shell command. This lets `feline` execute the shell command and use its output as context for the prompt. For example:
-```bash
-feline 'Summarize the output of the ls -l $(ls -l)' -it
+`feline 'Summarize the output of the ls -l $(ls -l)' -it`
+
+```markdown
 $> [FELINE]
 The output shows a detailed listing of the user's home directory contents, including: ...
+---
+```
 
 **Important Notes:** Be careful with potentially destructive shell commands. Ensure you trust the prompt and the commands you are executing.
----
 
 ### Run feline. Examples:
 
@@ -92,7 +94,7 @@ AI, or Artificial Intelligence, is a vast and complex field, but at its core, it
 ---
 ```
 
-- Complex tasks: (`feline --model flash -it` or `feline --model flash-preview -it`)
+- Complex tasks: (`feline --model flash -it` or `feline --model preview -it`)
 ```markdown
 $> [PROMPT] **Press Return 2 times to exit**
 $> Explains the relationship between climate change and human migration, highlighting both direct and indirect causes, and offers concrete examples from vulnerable regions.
