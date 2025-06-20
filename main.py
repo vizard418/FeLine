@@ -11,130 +11,138 @@ from lib.history import History
 from lib.speech import Speech
 
 
-def get_api_key(varname:str) ->str:
-    api_key = getenv(varname)
-
-    if not api_key:
-        raise NameError('Error loading %s' % varname)
-    else: return api_key
+class FeLine:
+    def __init__(self, engine:str):
+        if engine == 'gemini':
+            self.engine = Gemini()
 
 
-def get_input(history_file) ->str:
-    print('\n' + MultilineIn.LABEL_IN, MultilineIn.LABEL_EXIT)
-    return MultilineIn.get_user_input(history_file)
-
-
-def parse_instructions(prompt_text:str) ->tuple[str, str]:
-    try:
-        command_expand = CmdHandler.get_expand(prompt_text)
-    except:
-        print(MultilineIn.LABEL_ERROR, 'Shell: Unrecognized command.')
-        command_expand = None
-
-    images_locations = CmdHandler.get_file_locations(prompt_text)
-    return command_expand, images_locations
-
-
-def load_images(images_filenames:list) ->list[bytes]:
-    try:
-        images = [ImageParser.image_resolve(x) for x in images_filenames]
-    except:
-        print(MultilineIn.LABEL_ERROR, 'Image: Error loading.')
-        return
-    return images
-
-
-def speech_generation(data) -> bool:
-    try:
-        speech_data = feline.generate_speech(data)
-
-        wav_dir = str(History.CACHE_DIR)
-        wav_name = Speech.get_wavfilename()
-        wav_path = f'{wav_dir}/{wav_name}'
-
-        Speech.export_wav(wav_path, speech_data)
-
-    except:
-        print(MultilineIn.LABEL_ERROR, 'Speech could not be generated')
+    def set_model(self, model:str) -> bool:
+        if self.engine.AVAILABLE_MODELS.get(model):
+            self.engine.model = self.engine.AVAILABLE_MODELS[model]
+            return True
         return False
 
-    print(MultilineIn.LABEL_OUT, f'-> {wav_path}')
-    print('You can use the `aplay` command at the following path')
-    return True
+
+    def clear_cache(self) ->None:
+        try:
+            History.clear_input()
+            History.delete_wav()
+        except:
+            History.check_dir()
+            return False
+        return True
+
+
+    def get_response(self, contents:str):
+        return self.engine.get_chat_stream(contents)
+
+
+    def generate_speech(self, data:iter, filepath:str) ->bool:
+        try:
+            speech_data = self.engine.generate_speech(data)
+            Speech.export_wav(filepath, speech_data)
+
+        except: return False
+        return True
 
 
 if __name__ == '__main__':
     # argument parser
     parser = ArgParser()
     parser.set_models(Gemini.AVAILABLE_MODELS)
-
+    
     args = parser.parse_args()
 
-    # history manager
-    if args.clear: History.clear_input()
-
     # agent initialize
-    if args.message or args.interactive:
-        feline = Gemini(api=get_api_key(Gemini.API_VARNAME))
+    feline = FeLine(engine='gemini')
 
-        if args.model:
-            feline.model = Gemini.AVAILABLE_MODELS[args.model]
-
-        if args.message:
-            user_input= ' '.join(args.message)
-        else: user_input= ''
-
-        # turn based chat
-        loop = True
-
-        while loop:
-            History.check_dir()
-
-            if not args.interactive:
-                loop=False
-            if not user_input:
-                user_input = get_input(History.HISTORY_INPUT)
-
-                if not user_input:
-                    print()
-                    break
-
-            # prompt instructions handler
-            command_expand, images_locations = parse_instructions(user_input)
-            if command_expand:
-                user_input = '%s\n%s' % (user_input, command_expand)
-
-            # image recognition
-            if images_locations:
-                prompt_contents = load_images(images_locations)
-
-                if not prompt_contents:
-                    prompt_contents = user_input
-                else:
-                    prompt_contents.insert(0, user_input)
-        
-            # text recognition
-            else:
-                prompt_contents = user_input
-
-            # text generation
-            response_chunks = []
-            response = feline.get_chat_stream(prompt_contents)
-
-            print('\n' + MultilineIn.LABEL_OUT)
-
-            for chunk in response:
-                print(chunk.text, end='')
-                response_chunks.append(chunk)
-            
-            print('\n---')
-
-            # speech generation
-            confirm = input('$> Proceed playback? (y/N): ')
-            if confirm.lower() in ('y', 'yes'):
-                speech_generation(response_chunks)
-
-            user_input = ''
+    if args.model:
+        feline.set_model(model=args.model)
+    
+    if args.message:
+        user_input= ' '.join(args.message)
     else:
-        parser.print_help()
+        user_input= ''
+
+    # history manager
+    if args.clear:
+        if feline.clear_cache():
+            print(MultilineIn.LABEL_OUT, '~ Input history clean ~')
+
+    # need message or --interactive flag
+    if not (args.message or args.interactive):
+        message = 'Please provide me with a message or the -it parameter.'
+        print(MultilineIn.LABEL_ERROR, message)
+        exit()
+
+    # turn based chat
+    loop = True
+    while loop:
+        History.check_dir()
+
+        if not args.interactive: loop=False
+        
+        if not user_input:
+            print('\n' + MultilineIn.LABEL_IN, MultilineIn.LABEL_EXIT)
+            user_input = MultilineIn.get_user_input(History.INPUT_HISTORY)
+
+            if not user_input: print(); break
+
+        # prompt instructions handler
+        try:
+            command_expand = CmdHandler.get_expand(user_input)
+        except:
+            print(MultilineIn.LABEL_ERROR, 'Shell: Unrecognized command.')
+            command_expand = None
+
+        if command_expand:
+            user_input = '%s\n%s' % (user_input, command_expand)
+
+        # image recognition
+        images_path= CmdHandler.get_file_locations(user_input)
+        
+        if images_path:
+            try:
+                prompt_contents = [ImageParser.image_resolve(x) for x in images_path]
+            except:
+                print(MultilineIn.LABEL_ERROR, 'Image: Error loading.')
+                
+            if not prompt_contents:
+                prompt_contents = [user_input]
+
+            else:
+                prompt_contents.insert(0, user_input)
+        else:
+            prompt_contents = [user_input]
+
+        # text generation
+        response_chunks = []
+        response = feline.get_response(prompt_contents)
+
+        print('\n' + MultilineIn.LABEL_OUT)
+
+        for chunk in response:
+            print(chunk.text, end='')
+            response_chunks.append(chunk)
+            
+        print('\n---')
+
+        # speech generation
+        if loop or args.speech:
+            confirm = input('$> Proceed playback? (y/N): ')
+
+            if confirm.lower() in ('y', 'yes'):
+                wav_dir = str(History.DIR_CACHE)
+                wav_name = Speech.get_wavfilename()
+                wav_realpath = f'{wav_dir}/{wav_name}'
+
+                if feline.generate_speech(response_chunks, wav_realpath):
+                    print(MultilineIn.LABEL_OUT, f'-> {wav_realpath}')
+                    print('You can use the `aplay` command at the following path')
+
+                else:
+                    print(MultilineIn.LABEL_ERROR, 'Speech could not be generated')
+
+        user_input = ''
 

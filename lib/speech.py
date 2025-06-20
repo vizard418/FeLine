@@ -22,8 +22,3 @@ class Speech:
             wf.setframerate(rate)
             wf.writeframes(pcm)
 
-
-    @staticmethod
-    def play_wav(wavpath:str):
-        check_output(['aplay', wavpath])
-

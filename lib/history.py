@@ -2,20 +2,28 @@
 # -*- coding: utf-8 -*-
 
 from pathlib import Path
+from os import listdir
+from os.path import join as joinpath
+from os import remove as removefile
 
 class History:
-    CACHE_DIR = Path.home() / '.cache' / 'FeLine'
-    HISTORY_INPUT = CACHE_DIR / '.input-history'
+    DIR_CACHE = Path.home() / '.cache' / 'feline'
+    INPUT_HISTORY = DIR_CACHE / '.input_history'
 
     @staticmethod
     def check_dir():
-        History.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        History.DIR_CACHE.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def clear_input():
-        try:
-            with open(History.HISTORY_INPUT, 'w') as f:
-                print('~ History input clean ~')
-        except:
-            History.check_dir()
+        with open(History.INPUT_HISTORY, 'w') as f:
+            pass
+
+    @staticmethod
+    def delete_wav():
+        wav_files = [x for x in listdir(History.DIR_CACHE) if x.endswith('.wav')]
+
+        for f in wav_files:
+            filepath = joinpath(History.DIR_CACHE, f)
+            removefile(filepath)
 

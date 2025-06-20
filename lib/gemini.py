@@ -3,23 +3,20 @@
 
 from google.genai import Client
 from google.genai import types
+from os import getenv
 
 class Gemini(Client):
 
     API_VARNAME = 'GEMINI_API_KEY'
-
     AVAILABLE_MODELS = {
         'flash' : 'gemini-2.0-flash',
         'lite' : 'gemini-2.0-flash-lite',
         'preview' : 'gemini-2.5-flash-preview-05-20'
     }
-
     DEFAULT_MODEL = AVAILABLE_MODELS['lite']
 
-
-    def __init__(self, api:str):
-        super().__init__(api_key=api)
-
+    def __init__(self):
+        super().__init__(api_key=getenv(Gemini.API_VARNAME))
         self.model = self.DEFAULT_MODEL
         self.chat = None
 
