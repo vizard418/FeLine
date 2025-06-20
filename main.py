@@ -44,6 +44,25 @@ def load_images(images_filenames:list) ->list[bytes]:
     return images
 
 
+def speech_generation(data) -> bool:
+    try:
+        speech_data = feline.generate_speech(data)
+
+        wav_dir = str(History.CACHE_DIR)
+        wav_name = Speech.get_wavfilename()
+        wav_path = f'{wav_dir}/{wav_name}'
+
+        Speech.export_wav(wav_path, speech_data)
+
+    except:
+        print(MultilineIn.LABEL_ERROR, 'Speech could not be generated')
+        return False
+
+    print(MultilineIn.LABEL_OUT, f'-> {wav_path}')
+    print('You can use the `aplay` command at the following path')
+    return True
+
+
 if __name__ == '__main__':
     # argument parser
     parser = ArgParser()
@@ -113,19 +132,7 @@ if __name__ == '__main__':
             # speech generation
             confirm = input('$> Proceed playback? (y/N): ')
             if confirm.lower() in ('y', 'yes'):
-
-                try:
-                    speach_data = feline.generate_speach(response_chunks)
-                        
-                    wav_dir = str(History.CACHE_DIR)
-                    wav_name = Speech.get_wavfilename()
-                    wav_path = f'{wav_dir}/{wav_name}'
-                    
-                    Speech.export_wav(wav_path, speach_data)
-                    Speech.play_wav(wav_path)
-
-                except:
-                    pass
+                speech_generation(response_chunks)
 
             user_input = ''
     else:

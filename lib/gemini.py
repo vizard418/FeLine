@@ -31,11 +31,10 @@ class Gemini(Client):
         return self.chat.send_message_stream(message)
 
 
-    def generate_speach(self, text:str):
+    def generate_speech(self, text:str):
         response = self.models.generate_content(
             model="gemini-2.5-flash-preview-tts",
-            contents=text,
-            config=types.GenerateContentConfig(
+            contents=text, config=types.GenerateContentConfig(
                 response_modalities=["AUDIO"],
                 speech_config=types.SpeechConfig(
                     voice_config=types.VoiceConfig(
@@ -46,6 +45,7 @@ class Gemini(Client):
                 ),
             )
         )
+
         data = response.candidates[0].content.parts[0].inline_data.data
         return data
 
