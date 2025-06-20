@@ -72,8 +72,12 @@ if __name__ == '__main__':
 
     # need message or --interactive flag
     if not (args.message or args.interactive):
-        message = 'Please provide me with a message or the -it parameter.'
-        print(MultilineIn.LABEL_ERROR, message)
+        message = (
+            'Please provide me with a message or the -it parameter.',
+            'Alternatively, you can use the `--help` parameter'
+        )
+
+        print(MultilineIn.LABEL_ERROR, ' '.join(message))
         exit()
 
     # turn based chat
