@@ -3,7 +3,6 @@
 
 from lib.argparser import ArgParser
 from lib.gemini import Gemini
-from os import getenv
 from lib.multiline_in import MultilineIn
 from lib.cmdhandler import CmdHandler
 from lib.imageparser import ImageParser
@@ -24,12 +23,15 @@ class FeLine:
         return False
 
 
-    def clear_cache(self) ->None:
+    def clear_cache(self) ->bool:
         try:
-            History.clear_input()
-            History.delete_wav()
+            if History.clear_input():
+                print(MultilineIn.LABEL_OUT, '~ Input history clean ~')
+
+            if History.delete_wav():
+                print(MultilineIn.LABEL_OUT, '~ Deleted WAV files ~')
         except:
-            History.check_dir()
+            print(MultilineIn.LABEL_ERROR, '~ No files in cache ~')
             return False
         return True
 
@@ -49,30 +51,26 @@ class FeLine:
 
 if __name__ == '__main__':
     # argument parser
-    parser = ArgParser()
-    parser.set_models(Gemini.AVAILABLE_MODELS)
-    
+    parser = ArgParser(*Gemini.AVAILABLE_MODELS)
     args = parser.parse_args()
 
     # agent initialize
     feline = FeLine(engine='gemini')
-
+    
+    if args.clear:
+        feline.clear_cache()
+    
     if args.model:
         feline.set_model(model=args.model)
     
+    prompt_input = ''
     if args.message:
-        user_input= ' '.join(args.message)
-    else:
-        user_input= ''
+        prompt_input = ' '.join(args.message)
 
-    # history manager
-    if args.clear:
-        if feline.clear_cache():
-            print(MultilineIn.LABEL_OUT, '~ Input history clean ~')
 
     # need message or --interactive flag
     if not (args.message or args.interactive):
-        message = (
+        help_messages = (
             'Please provide me with a message or the -it parameter.',
             'Alternatively, you can use the `--help` parameter'
         )
@@ -87,38 +85,35 @@ if __name__ == '__main__':
 
         if not args.interactive: loop=False
         
-        if not user_input:
+        if not prompt_input:
             print('\n' + MultilineIn.LABEL_IN, MultilineIn.LABEL_EXIT)
-            user_input = MultilineIn.get_user_input(History.INPUT_HISTORY)
 
-            if not user_input: print(); break
+            prompt_input = MultilineIn.get_user_input(str(History.INPUT_HISTORY))
+            if not prompt_input: print(); break
+
 
         # prompt instructions handler
         try:
-            command_expand = CmdHandler.get_expand(user_input)
+            command_expand = CmdHandler.get_expand(prompt_input)
         except:
             print(MultilineIn.LABEL_ERROR, 'Shell: Unrecognized command.')
             command_expand = None
 
         if command_expand:
-            user_input = '%s\n%s' % (user_input, command_expand)
+            prompt_input = '%s\n%s' % (prompt_input, command_expand)
+
+
+        prompt_contents = [prompt_input]
 
         # image recognition
-        images_path= CmdHandler.get_file_locations(user_input)
+        images_path= CmdHandler.get_file_locations(prompt_input)
         
         if images_path:
             try:
-                prompt_contents = [ImageParser.image_resolve(x) for x in images_path]
+                images = [ImageParser.image_resolve(x) for x in images_path]
+                prompt_contents.append(*images)
             except:
                 print(MultilineIn.LABEL_ERROR, 'Image: Error loading.')
-                
-            if not prompt_contents:
-                prompt_contents = [user_input]
-
-            else:
-                prompt_contents.insert(0, user_input)
-        else:
-            prompt_contents = [user_input]
 
         # text generation
         response_chunks = []
@@ -148,5 +143,5 @@ if __name__ == '__main__':
                 else:
                     print(MultilineIn.LABEL_ERROR, 'Speech could not be generated')
 
-        user_input = ''
+        prompt_input = ''
 
