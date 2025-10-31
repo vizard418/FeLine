@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# Resolve wrapper directory
+WRAPPER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Check OS type for activation path
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
+    # Windows environment (Git Bash, MinGW, Cygwin): Use Scripts/activate
+    # This script is designed to set the PATH correctly for Unix-like shells on Windows
+    source "$WRAPPER_DIR/env/Scripts/activate"
+else
+    # Unix-like environment (Linux, macOS): Use bin/activate
+    source "$WRAPPER_DIR/env/bin/activate"
+fi
+
+# Execute application
+python "$WRAPPER_DIR/main.py" "$@"
+
+# Deactivate virtual environment
+deactivate

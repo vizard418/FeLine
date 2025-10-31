@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FeLine CLI</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <!-- Prism.js CSS con tema Gruvbox oscuro -->
+  <link href="https://cdn.jsdelivr.net/gh/PrismJS/prism-themes/themes/prism-gruvbox-dark.css" rel="stylesheet" />
+
+  <style>
+    body {
+      background-color: #282828;
+      color: #ebdbb2;
+      font-family: 'Fira Code', monospace;
+    }
+
+    pre {
+      background-color: #3c3836 !important;
+      padding: 1rem;
+      border-radius: 0.5rem;
+    }
+
+    .logo-feline .text-feline {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+
+    .logo-feline .terminal {
+      color: #458588; /* verde gruvbox */
+      margin-right: 2rem;
+    }
+
+    .logo-feline .feline-fe {
+      color: #458588;
+    }
+
+    .logo-feline .feline-line {
+      color: #fabd2f; /* amarillo gruvbox */
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-start p-8 space-y-8">
+  <nav class="w-full max-w-5xl flex items-center justify-between bg-[#3c3836] px-4 py-2 rounded-md shadow-md">
+    <!-- Logo o icono -->
+    <div class="flex items-center space-x-2 logo-feline">
+      <div class="text-feline">
+        <span class="terminal">&gt;_</span>
+        <span class="feline-fe">Fe</span><span class="feline-line">Line</span>
+      </div>
+    </div>
+
+    <!-- Enlaces -->
+    <div class="flex space-x-4">
+      <a href="https://github.com/vizard418/FeLine" 
+         target="_blank" 
+         rel="noopener noreferrer"
+         class="font-semibold px-4 py-1 rounded-md text-sm transition" style="background-color: #fabd2f; color: #282828">
+        Documentación
+      </a>
+
+      <button onclick="document.getElementById('modal').classList.remove('hidden')"
+              class="text-white font-semibold px-4 py-1 rounded-md text-sm transition"
+              style="background-color: #458588;">
+        Contacto
+      </button>
+    </div>
+  </nav>
+
+  <section class="mt-6 max-w-3xl text-center text-gray-400">
+    <ul class="text-lg list-disc list-inside space-y-2" style="font-size: 1rem; line-height: 1.1rem;">
+      <li>Consultas a modelos de inteligencia artificial.</li>
+      <li>Interfaz interactiva de línea de comandos.</li>
+      <li>Manejar la Entrada y Salida estándar del sistema (E/S).</li>
+      <li>Énfasis en el control del usuario.</li>
+      <li>No es intrusivo. Solo es un cliente a los modelos de lenguaje.</li>
+      <li>El usuario decide qué enviar de contexto.</li>
+    </ul>
+  </section>
+
+  <section class="max-w-3xl w-full">
+    <h2 class="text-2xl font-semibold text-purple-400">Uso Basico&#58;</h2>
+    <pre><code class="language-bash">
+feline --help
+
+usage: feline [-h] [--interactive] [--model {lite,flash,preview}] [message]
+Interactive CLI AI tool
+positional arguments:
+  message                         Send message to the prompt.
+
+options:
+  -h, --help                      show this help message and exit
+  --interactive, -it              Start interactive chat mode.
+  --model {lite,flash,preview},
+  -m {lite,flash,preview}         Switch to a specific model.
+
+    </code></pre>
+  </section>
+
+  <section class="max-w-3xl w-full" style="font-size: 1.3rem">
+    <h2 class="text-2xl font-semibold text-purple-400">Un caso de uso destacado&#58;</h2>
+    <p class="text-lg text-gray-400" style="font-size: 1rem; line-height: 1.3;">
+      Pedirle a FeLine que genere información traducida a partir de documentación web.
+    </p>
+
+
+    <pre class="whitespace-pre-wrap text-sm leading-relaxed">
+      <span style="color: #7d8931;">
+      ███████╗███████╗██╗     ██╗███╗   ██╗███████╗
+      ██╔════╝██╔════╝██║     ██║████╗  ██║██╔════╝
+      █████╗  █████╗  ██║     ██║██╔██╗ ██║█████╗
+      ██╔══╝  ██╔══╝  ██║     ██║██║╚██╗██║██╔══╝
+      ██║     ███████╗███████╗██║██║ ╚████║███████╗
+      ╚═╝     ╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
+      ** Imagination Is The Limit **
+      ** Selected Model: gemini-2.5-flash-lite **
+      </span>
+
+      <span style="color: #7d8931;">[User]: **Press Return 2 times to exit**</span>
+      > Haz un breve resumen en español de qué se trata el proyecto
+      > y dime cómo podría serme útil en un ámbito estudiantil.
+      > $(curl https://github.com/vizard418/FeLine)
+      >
+      <span style="color: #7cb8bb;">[Info]: </span> curl `https://github.com/vizard418/FeLine`
+
+      <span style="color: #d4a94e;">[FeLine]:</span>
+      ## Aquí tienes un breve resumen del proyecto FeLine
+      y cómo podría serte útil en un ámbito estudiantil:
+
+      FeLine es un agente de inteligencia artificial interactivo
+      diseñado para ser utilizado directamente desde la línea de comandos.
+      Su objetivo principal es facilitar la interacción con modelos de IA,
+      permitiendo a los usuarios realizar diversas tareas de forma eficiente.
+
+      1. Asistencia en el Estudio y la Investigación:
+         - Resumir documentos largos
+         - Explicar conceptos complejos
+         - Analizar imágenes o datos visuales
+    </pre>
+
+  </section>
+
+  <section class="max-w-3xl w-full text-gray-400" style="font-size: 1rem; line-height: 1.3;">
+    <h2 class="text-2xl font-semibold text-green-400 mb-4">Historia&#58;</h2>
+    <p class="mt-2">
+      FeLine nació como un pequeño script diseñado para resolver un problema técnico relacionado con el reconocimiento de imágenes. Con el tiempo, se incorporó una funcionalidad para ejecutar consultas rápidas sobre texto, como analizar archivos o procesar información desde la web, redireccionando salidas de comandos como `curl` directamente al prompt.
+    </p>
+    <p class="mt-2">
+      Esta capacidad evolucionó hasta integrarse como un comando interno, permitiendo a FeLine ejecutar comandos de shell y usar sus salidas como contexto. Luego se añadió un modo de conversación por turnos, similar a un chat, que facilitó el manejo de consultas complejas de forma incremental.
+    </p>
+    <p class="mt-2">
+      Más adelante, se sumaron modelos con diferentes niveles de análisis según la necesidad de velocidad o profundidad. La interfaz también fue refinada, siempre respetando la premisa de evitar dependencias innecesarias.
+    </p>
+    <p class="mt-2">
+      Hoy el proyecto sigue creciendo, enfocado en mejorar las funcionalidades esenciales y añadir nuevas herramientas que lo conviertan en una solución aún más versátil para usuarios técnicos o entusiastas.
+    </p>
+  </section>
+
+  <footer class="text-sm text-gray-500 mt-12">
+    Hecho con ♥ <a href="https://github.com/vizard418" target="_blank" rel="noopener noreferrer" class="underline hover:text-white">Vizard</a>
+  </footer>
+
+  <!-- Formulario modal -->
+  <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 hidden">
+    <div class="rounded-lg p-6 w-full max-w-md shadow-lg relative" style="background-color: #282828;">
+
+      <!-- Botón de cerrar -->
+      <button onclick="document.getElementById('modal').classList.add('hidden')"
+              class="absolute top-2 right-2 text-gray-400 hover:text-white text-lg font-bold">
+        ×
+      </button>
+
+      <h2 class="text-xl font-semibold mb-4 text-white">Contacto</h2>
+
+      <form action="https://formsubmit.co/932fc4568a9ab86e159874e31c616825"
+            method="POST"
+            target="_blank"
+            class="space-y-4">
+        <input type="hidden" name="_captcha" value="false" />
+        <input type="text" name="nombre" required placeholder="Tu nombre"
+              class="w-full px-4 py-2 rounded-md"
+              style="background-color: #1d2021; color: #ebdbb2;" />
+        <input type="email" name="email" required placeholder="Tu correo"
+              class="w-full px-4 py-2 rounded-md"
+              style="background-color: #1d2021; color: #ebdbb2;" />
+        <textarea name="mensaje" required placeholder="Tu mensaje"
+                  class="w-full px-4 py-2 rounded-md"
+                  style="background-color: #1d2021; color: #ebdbb2;"></textarea>
+        <button type="submit"
+                class="text-white font-semibold px-4 py-2 rounded-md text-sm transition"
+                style="background-color: #458588;">
+          Enviar mensaje
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-markdown.min.js"></script>
+</body>
+</html>
+
