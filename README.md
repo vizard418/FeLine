@@ -34,9 +34,9 @@ Permite mantener conversaciones persistentes con el modelo seleccionado.
 ## 🔹 Seleccion flexible de modelos
 Puedes elegir entre distintos modelos disponibles, por ejemplo:
 
-- `gemini-flash`
-- `gemini-pro`
-- `gemini-lite`
+- `**flash** gemini-2.5-flash`
+- `**pro** gemini-2.5-pro`
+- `**lite** gemini-2.5-flash-lite`
 
 ---
 
@@ -98,7 +98,7 @@ Un entorno virtual evita conflictos con otras instalaciones de Python.
 ```bash
 python3 -m pip install virtualenv
 cd FeLine/
-python3 -m virtualenv venv
+python3 -m virtualenv env
 ```
 
 ### Activar entorno e instalar dependencias
@@ -106,7 +106,7 @@ python3 -m virtualenv venv
 #### En Unix
 
 ```bash
-source venv/bin/activate
+source env/bin/activate
 python -m pip install -r requirements.txt
 deactivate
 ```
@@ -114,7 +114,7 @@ deactivate
 #### En Windows
 
 ```powershell
-venv\Scripts\activate
+env\Scripts\activate
 python -m pip install -r requirements.txt
 deactivate
 ```
@@ -133,7 +133,7 @@ Agregar al archivo `~/.bashrc`, `~/.profile` o similar:
 
 ```bash
 # FeLine - AI CLI Agent
-export GEMINI_API_KEY="TuApiKeyAqui"
+export GEMINI_API_KEY="API_KEY_VALUE"
 export PATH="$PATH:~/FeLine"
 ```
 

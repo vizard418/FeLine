@@ -4,18 +4,18 @@
 from colorama import init
 from colorama import Style
 from colorama import Fore
-from rich.console import Console
-from rich.markdown import Markdown
+from colorama import Back
+from pydoc import pager
 
-BANNER_ASCII = '''
-    ███████╗███████╗██╗     ██╗███╗   ██╗███████╗
-    ██╔════╝██╔════╝██║     ██║████╗  ██║██╔════╝
-    █████╗  █████╗  ██║     ██║██╔██╗ ██║█████╗
-    ██╔══╝  ██╔══╝  ██║     ██║██║╚██╗██║██╔══╝
-    ██║     ███████╗███████╗██║██║ ╚████║███████╗
-    ╚═╝     ╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
-    ** Imagination Is The Limit **
-    ** Selected Model: %s **
+APP_BANNER = '''
+ ███████╗███████╗██╗     ██╗███╗   ██╗███████╗
+ ██╔════╝██╔════╝██║     ██║████╗  ██║██╔════╝
+ █████╗  █████╗  ██║     ██║██╔██╗ ██║█████╗
+ ██╔══╝  ██╔══╝  ██║     ██║██║╚██╗██║██╔══╝
+ ██║     ███████╗███████╗██║██║ ╚████║███████╗
+ ╚═╝     ╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚══════╝
+ ** Imagination Is The Limit **
+ ** Selected Model: %s **
 '''
 # Initializes colorama, ensuring ANSI codes work on Windows.
 init(autoreset=True)
@@ -23,50 +23,46 @@ init(autoreset=True)
 class Printer:
     """Utility class for printing formatted output."""
 
-    def __init__(self):
-        self.console = Console()
-
     def banner(self, model:str='') ->None:
         """Print application banner with selected model name."""
-        print(Fore.GREEN + BANNER_ASCII % model)
+        print(APP_BANNER % model)
 
 
     def system_ok(self, message:str='') ->None:
         """Print system message with OK status in green."""
-        print(Fore.CYAN + '[System]:', end=' ')
-        print(Style.RESET_ALL + Style.DIM + message, end=' ')
-        print(Style.RESET_ALL + Fore.GREEN + 'OK')
+        print(f'>{Style.BRIGHT} {message} [{Fore.GREEN}OK{Style.RESET_ALL}]')
 
 
     def system_err(self, message:str=''):
         """Print system message with ERROR status in red."""
-        print(Fore.CYAN + '[System]:', end=' ')
-        print(Style.RESET_ALL + Style.DIM + message, end=' ')
-        print(Style.RESET_ALL + Fore.RED + 'ERR')
+        print(f'>{Style.BRIGHT} {message} [{Fore.RED}ERR{Style.RESET_ALL}]')
+
 
     def goodbye(self) ->None:
         """Print system warning message in yellow."""
-        message = '¡Meow! Goodbye, human. Come back anytime.\n'
-        print(Fore.BLUE + Style.BRIGHT + message)
+        print(f'{Style.BRIGHT}¡Meow! Goodbye, human. Come back anytime.')
+
 
     def feline(self) ->None:
         """Print FeLine turn header."""
-        print(Fore.YELLOW + '\n[FeLine]:')
+        print(f'\n{Back.WHITE}{Fore.BLACK}[FeLine]')
+
 
     def user(self) ->None:
         """Print user turn header."""
-        print()
-        print(Fore.GREEN + '\n[User]: **Press Return 2 times to exit**')
+        print(f'\n{Back.WHITE}{Fore.BLACK}[User]:{Style.RESET_ALL} **Press Return 2 times to exit**')
+
 
     def system_warning(self, message:str) ->None:
         """Print farewell message when application exits."""
-        print(Fore.YELLOW + '[Warning]:', message)
+        print(f'> {Style.BRIGHT}{message} [{Fore.YELLOW}WARNING{Style.RESET_ALL}]')
+
 
     def system_info(self, message:str) ->None:
         """Print system information."""
-        print(Fore.CYAN + '[Info]:', message)
+        print(f'> {Style.BRIGHT}{message} [{Fore.CYAN}INFO{Style.RESET_ALL}]')
 
-    def styled_text(self, text: str) -> None:
-        """Render Markdown text in console with styles."""
-        md = Markdown(text)
-        self.console.print(md, end='')
+    def print_response(self, response_text:str) -> None:
+        """Print text with pager."""
+        pager(response_text)
+

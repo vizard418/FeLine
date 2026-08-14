@@ -7,6 +7,7 @@ from lib.models import Models
 from lib.engine import Engine
 from lib.chatty import Chatty
 
+
 class Main:
     """Main application controller."""
 
@@ -24,27 +25,21 @@ class Main:
         model = Models.availables.get(self.args.model)
         self.printer.banner(model)
 
-        self._run_setup()
-        self._cleanup()
+        self.run_setup()
+        self.cleanup()
 
         # Set client model
         self.engine.client.model = model
 
         # main chat
-        self._run_chat()
+        self.run_chat()
 
         # App say goodbye
         self.printer.feline()
         self.printer.goodbye()
 
 
-    def _verbose(self, detail:any) -> None:
-        """Checks for the --verbose flag and prints  detail if set."""
-        if self.args.verbose:
-            print(detail)
-
-
-    def _run_setup(self) ->bool:
+    def run_setup(self) ->bool:
         """Create application filesystem"""
         if self.args:
             message = 'Checking File System...'
@@ -58,7 +53,7 @@ class Main:
                 return False
 
 
-    def _cleanup(self) ->bool:
+    def cleanup(self) ->bool:
         """Clear local files if '--clear' argument is set."""
         if self.args and self.args.clear:
             message = 'Application cleanup...'
@@ -73,7 +68,7 @@ class Main:
         return False
 
 
-    def _run_chat(self) -> None:
+    def run_chat(self) -> None:
         """Run the main chat loop; repeat while '--interactive' flag is set."""
         if not (self.args.message or self.args.interactive):
             return
@@ -83,25 +78,27 @@ class Main:
             chat_loop = self.args.interactive
 
             self.printer.user()
-            prompt_input = self._get_prompt_input()
+            prompt_input = self.get_prompt_input()
             if not prompt_input:
                 break
 
-            image_data = self._get_img(prompt_input)
-            command_expands = self._get_expands(prompt_input)
+            image_data = self.get_image_data(prompt_input)
+            command_expands = self.get_expands(prompt_input)
 
             prompt_contents = [prompt_input]
             prompt_contents.extend(command_expands)
+
             if image_data is not None:
                 prompt_contents.append(image_data)
 
-            chat_response = self._get_response(prompt_contents)
+            chat_response = self.get_response(prompt_contents)
 
             if chat_response:
                 self.engine.add_to_history(chat_response)
+                self.printer.print_response(chat_response)
 
 
-    def _get_prompt_input(self) -> str:
+    def get_prompt_input(self) -> str:
         """Obtain user input (CLI or interactive) and log it in history only if needed."""
         prompt_input = ''
 
@@ -127,20 +124,19 @@ class Main:
         return prompt_input.rstrip()
 
 
-    def _get_expands(self, prompt_text:str) ->'List[str]':
+    def get_expands(self, prompt_text:str) ->'List[str]':
         """Execute shell commands from input and collect successful outputs."""
         expands = []
         for cmd, result in self.engine.handle_cmd(prompt_text):
             if isinstance(result, str):
                 self.printer.system_info(cmd)
-                self._verbose(result)
                 expands.append(result)
             else:
                 self.printer.system_warning(cmd)
         return expands
 
 
-    def _get_img(self, prompt_text: str) -> 'Optional[PIL.Image.Image]':
+    def get_image_data(self, prompt_text: str) -> 'Optional[PIL.Image.Image]':
         """Resolve image resource from input; print warning if invalid, return valid image or None."""
         image_file, image_data = self.engine.handle_img(prompt_text)
 
@@ -154,28 +150,20 @@ class Main:
         return image_data
 
 
-    def _get_response(self, contents: 'Iterable[Union[str, PIL.Image.Image]]') -> 'Optional[str]':
+    def get_response(self, contents: 'Iterable[Union[str, PIL.Image.Image]]') -> 'Optional[str]':
         """Stream model response; render Markdown paragraph by paragraph."""
         try:
             response = self.engine.get_response(contents)
-            buffer = ''
             response_chunks = ''
 
-            if response:
-                self.printer.feline()
+            if response: self.printer.feline()
 
             for chunk in response:
                 text = chunk.text
-                buffer += text
                 response_chunks += text
+                print(text, end='', flush=True)
 
-                while '\n\n' in buffer:
-                    para, buffer = buffer.split('\n\n', 1)
-                    self.printer.styled_text(para + '\n\n')
-
-            if buffer:
-                self.printer.styled_text(buffer)
-
+            print()
             return response_chunks
 
         except Exception as e:
