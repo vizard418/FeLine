@@ -1,5 +1,5 @@
-import os
 import re
+from os import environ
 from google import genai
 from openai import OpenAI
 from lib.tools import parse_commands, run_command
@@ -14,18 +14,15 @@ class Engine:
         self.api_key = None
         self.context = ""
 
-    def get_api_key(self) -> str | None:
-        """Obtiene la api key segun el modelo."""
-        if not self.model:
-            return None
-
+    def config_api_key(self) -> str | None:
+        """Establece la api key correspondiente al modelo seleccionado."""
         if "gemini" in self.model:
-            return os.environ.get("GEMINI_API_KEY")
+            self.api_key = environ.get("GEMINI_API_KEY")
+            return self.api_key
 
-        if "gpt" in self.model or "openai" in self.model:
-            return os.environ.get("OPENAI_API_KEY")
-
-        return None
+        elif "gpt" in self.model:
+            self.api_key = environ.get("OPENAI_API_KEY")
+            return self.api_key
 
     def build_prompt_message(self, text: str) -> str:
         """Construye el mensaje procesando los comandos."""
@@ -37,9 +34,7 @@ class Engine:
 
         for cmd in commands:
             output = run_command(cmd)
-            replacement = (
-                f"\n# OUTPUT: {cmd}\n{output}\n"
-            )
+            replacement = f"\n# OUTPUT: {cmd}\n{output}\n"
             processed_text = re.sub(
                 r"@(?:cmd|command)\("
                 + re.escape(cmd)
@@ -59,34 +54,17 @@ class Engine:
         """Genera una respuesta usando el cliente de IA."""
         if "gemini" in self.model:
             client = genai.Client(api_key=self.api_key)
-            response = client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-            )
+            response = client.models.generate_content(model=self.model,
+                contents=prompt,)
+
             return response.text
 
-        if (
-            "gpt" in self.model
-            or "openai" in self.model
-        ):
-            client = OpenAI(
-                api_key=self.api_key,
-                base_url="https://api.groq.com/openai/v1",
-            )
-            response = client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-            )
-            return (
-                response.choices[0]
-                .message.content
-            )
+        if "gpt" in self.model or "openai" in self.model:
+            client = OpenAI(api_key=self.api_key,
+                base_url="https://api.groq.com/openai/v1",)
 
-        raise ValueError(
-            f"Modelo no soportado: {self.model}"
-        )
+            response = client.chat.completions.create(model=self.model,
+                messages=[ {"role": "user", "content": prompt,} ],)
+
+            return (response.choices[0].message.content)
+        raise ValueError(f"Modelo no soportado: {self.model}")
