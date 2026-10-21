@@ -1,12 +1,12 @@
 import re
 from os import environ
-from google import genai
-from openai import OpenAI
 from lib.tools import parse_commands, run_command
+from lib.gemini import GeminiHandler
+from lib.openai import OpenAIHandler
 
 
 class Engine:
-    """Gestiona comandos, contexto y conexion con modelos."""
+    """Orquestador principal que delega las peticiones segun el modelo activo."""
 
     def __init__(self):
         self.model = None
@@ -20,12 +20,12 @@ class Engine:
             self.api_key = environ.get("GEMINI_API_KEY")
             return self.api_key
 
-        elif "gpt" in self.model:
+        elif "gpt" in self.model or "openai" in self.model:
             self.api_key = environ.get("OPENAI_API_KEY")
             return self.api_key
 
     def build_prompt_message(self, text: str) -> str:
-        """Construye el mensaje procesando los comandos."""
+        """Construye el mensaje procesando los comandos estaticos."""
         if not text:
             return text
 
@@ -44,27 +44,19 @@ class Engine:
                 count=1,
             )
 
-        # Si hay contexto previo, lo anteponemos al mensaje procesado
         if self.context:
             return f"{self.context}\nUser: {processed_text}"
 
         return processed_text
 
     def generate(self, prompt: str) -> str:
-        """Genera una respuesta usando el cliente de IA."""
+        """Delega la generacion de respuesta al manejador correspondiente."""
         if "gemini" in self.model:
-            client = genai.Client(api_key=self.api_key)
-            response = client.models.generate_content(model=self.model,
-                contents=prompt,)
-
-            return response.text
+            handler = GeminiHandler(self.api_key)
+            return handler.generate(self.model, prompt)
 
         if "gpt" in self.model or "openai" in self.model:
-            client = OpenAI(api_key=self.api_key,
-                base_url="https://api.groq.com/openai/v1",)
+            handler = OpenAIHandler(self.api_key)
+            return handler.generate(self.model, prompt)
 
-            response = client.chat.completions.create(model=self.model,
-                messages=[ {"role": "user", "content": prompt,} ],)
-
-            return (response.choices[0].message.content)
-        raise ValueError(f"Modelo no soportado: {self.model}")
+        raise ValueError(f"Model not supported: {self.model}")

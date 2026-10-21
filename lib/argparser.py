@@ -28,7 +28,7 @@ class Argparser(ArgumentParser):
         )
 
         self.add_argument(
-            '--interactive',
+            '--interactive', '-it',
             action='store_true',
             default=False,
             help='Start an interactive chat session.'

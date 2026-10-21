@@ -27,6 +27,7 @@ Su característica más útil es combinar el razonamiento de un LLM con informac
 | 🖥️ **Diagnóstico** | Interpretar procesos, memoria, disco y servicios. |
 | 🧑‍💻 **Desarrollo** | Revisar diffs, explicar comandos y proponer pruebas. |
 | 🔍 **Investigación** | Reunir la salida de herramientas locales y pedir un análisis contextual. |
+| 🤖 **Agente Autónomo** | Ejecución inteligente y supervisada de herramientas locales (*Function Calling*). |
 
 ## ✨ Características
 
@@ -36,6 +37,7 @@ Su característica más útil es combinar el razonamiento de un LLM con informac
 - Reanudación y consulta de chats guardados.
 - Selección de modelos y configuración de un modelo predeterminado.
 - Inserción de la salida de comandos del sistema mediante `@cmd(...)` o `@command(...)`.
+- Capacidades autónomas de **Agente (Function Calling)**: permite que los modelos (tanto Gemini como Groq/OpenAI) ejecuten comandos del sistema local de forma autónoma con **confirmación explícita del usuario** previa a la ejecución.
 - Soporte configurado para modelos Gemini y modelos compatibles con la API de OpenAI a través del endpoint de Groq.
 
 ## 📋 Requisitos
@@ -191,6 +193,22 @@ feline --interactive
 ```
 
 Escribe tu consulta y envíala. Para terminar, envía una entrada vacía dos veces.
+
+
+### 🤖 Uso como Agente Autónomo (Function Calling)
+
+Gracias a las capacidades de agente, puedes pedirle al modelo que inspeccione el sistema o realice tareas de diagnóstico. El agente evaluará si necesita invocar comandos locales (como `ss`, `netstat`, `ps`, etc.) y te solicitará confirmación interactiva antes de ejecutarlos:
+
+```bash
+feline -it "revisa los servicios que estan escuchando en los puertos de mi sistema y dime si ves algo sospechoso."
+```
+
+Cuando el agente intente ejecutar un comando, verás una advertencia como esta en la terminal:
+```text
+[Agent wants to execute command]: ss -tulnp
+Do you want to allow this execution? [Y/n]:
+```
+
 
 ### 🔗 Combinar un prompt con comandos del sistema
 
