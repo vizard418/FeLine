@@ -49,7 +49,6 @@ class UI:
     def print_user_message(self, message: str) -> None:
         print(f"\033[1m>\033[0m {message}\n\033[1m>\033[0m\n")
 
-
     def get_multiline_input(self) -> str | None:
         lines = []
         empty_lines = 0
@@ -76,11 +75,6 @@ class UI:
             lines.pop()
         return "\n".join(lines).strip()
 
-
-    def print_assistant_message(self, text: str):
-        """Muestra la respuesta generada por el asistente."""
-        self.pager.show_text(text)
-
     def print_chat_messages(self, messages: list):
         """Formatea los mensajes de un chat para pasarlos al paginador."""
         formatted_output = []
@@ -92,7 +86,31 @@ class UI:
 
         self.pager.show_text("\n".join(formatted_output))
 
+    def print_assistant_message(self, text: str):
+        """Muestra la respuesta generada por el asistente."""
+        if text.startswith("API Error:"):
+            self.print_error(text.removeprefix("API Error:").strip())
+            return
+
+        if text.startswith("Error:"):
+            self.print_error(text.removeprefix("Error:").strip())
+            return
+
+        if text.startswith("Tool execution limit reached"):
+            self.print_diagnostic(
+                "Tool limit reached",
+                text,
+            )
+            return
+
+        output = f"--- FeLine Response ---\n\n{text}"
+        self.pager.show_text(output)
+
+    def print_diagnostic(self, title: str, message: str):
+        """Muestra un diagnostico breve."""
+        print(f"\n\033[1m[FeLine] {title}\033[0m")
+        print(message)
 
     def print_error(self, err_msg: str):
         """Muestra un mensaje de error formateado."""
-        print(f"\n[FeLine Error] {err_msg}")
+        print(f"\n\033[1;31m[FeLine Error]\033[0m {err_msg}")

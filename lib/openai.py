@@ -35,47 +35,45 @@ class OpenAIHandler:
             ]
 
             messages = [{"role": "user", "content": prompt}]
+            max_iterations = 10
 
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=messages,
-                tools=tools,
-                tool_choice="auto",
-            )
-
-            response_message = response.choices[0].message
-
-            if response_message.tool_calls:
-                # Anexa el mensaje completo del asistente que contiene las llamadas a herramientas
-                messages.append(response_message)
-
-                for tool_call in response_message.tool_calls:
-                    if tool_call.function.name == "run_command":
-                        args = json.loads(tool_call.function.arguments)
-                        tool_output = run_command(args.get("command", ""))
-
-                        messages.append({
-                            "tool_call_id": tool_call.id,
-                            "role": "tool",
-                            "name": "run_command",
-                            "content": tool_output,
-                        })
-
-                second_response = self.client.chat.completions.create(
+            for iteration in range(max_iterations + 1):
+                response = self.client.chat.completions.create(
                     model=model,
                     messages=messages,
                     tools=tools,
                     tool_choice="auto",
                 )
 
-                content = second_response.choices[0].message.content
-                if content:
-                    return content
+                response_message = response.choices[0].message
 
-                # Si el mensaje viene vacio pero hay tool_calls secundarias o contenido alternativo
-                return "[La herramienta se ejecuto correctamente, pero el modelo no retorno texto adicional]"
+                if not response_message.tool_calls:
+                    content = response_message.content
+                    return content if content else "Error: Model returned an empty response."
 
-            content = response_message.content
-            return content if content else "Error: Model returned an empty response."
+                if iteration == max_iterations:
+                    return "Tool execution limit reached. Please refine your request."
+
+                messages.append(response_message)
+
+                for tool_call in response_message.tool_calls:
+                    if tool_call.function.name != "run_command":
+                        continue
+
+                    args = json.loads(tool_call.function.arguments)
+
+                    try:
+                        tool_output = run_command(args.get("command", ""))
+                    except Exception as e:
+                        tool_output = f"Tool error: {e}"
+
+                    messages.append({
+                        "tool_call_id": tool_call.id,
+                        "role": "tool",
+                        "name": "run_command",
+                        "content": tool_output,
+                    })
+
+            return "Tool execution limit reached."
         except Exception as e:
             return f"API Error: {str(e)}"

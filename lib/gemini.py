@@ -17,22 +17,35 @@ class GeminiHandler:
             )
 
             contents = [prompt]
-            response = self.client.models.generate_content(
-                model=model,
-                contents=contents,
-                config=config,
-            )
+            max_iterations = 10
 
-            if response.function_calls:
+            for iteration in range(max_iterations + 1):
+                response = self.client.models.generate_content(
+                    model=model,
+                    contents=contents,
+                    config=config,
+                )
+
+                if not response.function_calls:
+                    return response.text if response.text else "Error: Model returned an empty response."
+
+                if iteration == max_iterations:
+                    return "Tool execution limit reached. Please refine your request."
+
+                contents.append(response.candidates[0].content)
+
                 for function_call in response.function_calls:
                     name = function_call.name
                     args = function_call.args
-
                     tool_output = ""
-                    if name == "run_command":
-                        tool_output = run_command(args.get("command", ""))
 
-                    contents.append(response.candidates[0].content)
+                    if name == "run_command":
+                        try:
+                            tool_output = run_command(args.get("command", ""))
+                        except Exception as e:
+                            tool_output = f"Tool error: {e}"
+                    else:
+                        tool_output = f"Unknown tool: {name}"
 
                     contents.append(
                         types.Content(
@@ -46,13 +59,6 @@ class GeminiHandler:
                         )
                     )
 
-                    final_response = self.client.models.generate_content(
-                        model=model,
-                        contents=contents,
-                        config=config,
-                    )
-                    return final_response.text if final_response.text else "Error: Model returned an empty response after tool execution."
-
-            return response.text if response.text else "Error: Model returned an empty response."
+            return "Tool execution limit reached."
         except Exception as e:
             return f"API Error: {str(e)}"

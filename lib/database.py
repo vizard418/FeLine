@@ -69,21 +69,25 @@ class Database:
             )
             conn.commit()
 
-    def get_chat_history(self, chat_id: int, limit: int = 10) -> list:
-        """Devuelve los ultimos mensajes de un chat."""
+    def get_chat_history(self, chat_id: int, limit: int = 6) -> list:
+        """Devuelve los mensajes mas recientes de un chat."""
         with self._get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                SELECT role, content FROM messages
-                WHERE chat_id = ?
+                SELECT role, content
+                FROM (
+                    SELECT id, role, content
+                    FROM messages
+                    WHERE chat_id = ?
+                    ORDER BY id DESC
+                    LIMIT ?
+                )
                 ORDER BY id ASC
-                LIMIT ?
                 """,
                 (chat_id, limit),
             )
             return [dict(row) for row in cursor.fetchall()]
-
 
     def get_conversations(self) -> list:
         """Devuelve todas las conversaciones guardadas."""
@@ -119,3 +123,74 @@ class Database:
                 (chat_id,),
             )
             return [dict(row) for row in cursor.fetchall()]
+
+    def delete_conversation(self, chat_id: int) -> bool:
+        """Elimina un chat y sus mensajes."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "DELETE FROM messages WHERE chat_id = ?",
+                (chat_id,),
+            )
+
+            cursor.execute(
+                "DELETE FROM conversations WHERE id = ?",
+                (chat_id,),
+            )
+
+            return cursor.rowcount > 0
+
+    def rename_conversation(self, chat_id: int, title: str) -> bool:
+        """Actualiza el titulo de un chat."""
+        title = title.strip()
+
+        if not title:
+            return False
+
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE conversations
+                SET title = ?
+                WHERE id = ?
+                """,
+                (title, chat_id),
+            )
+
+            return cursor.rowcount > 0
+    def delete_conversation(self, chat_id: int) -> bool:
+        """Elimina un chat y sus mensajes."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute(
+                "DELETE FROM messages WHERE chat_id = ?",
+                (chat_id,),
+            )
+
+            cursor.execute(
+                "DELETE FROM conversations WHERE id = ?",
+                (chat_id,),
+            )
+
+            return cursor.rowcount > 0
+
+    def rename_conversation(self, chat_id: int, title: str) -> bool:
+        """Actualiza el titulo de un chat."""
+        title = title.strip()
+
+        if not title:
+            return False
+
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE conversations
+                SET title = ?
+                WHERE id = ?
+                """,
+                (title, chat_id),
+            )
+
+            return cursor.rowcount > 0

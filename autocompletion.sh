@@ -5,16 +5,13 @@ _feline_completions() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    opts="-h --help --model --model-config --interactive --purge --show-models --show-chats --resume-chat --show-chat"
-    
-    # Ruta al models.ini (busca primero en el directorio de config del script o usa el fallback del proyecto)
+    opts="-h --help --model --model-config --interactive --purge --show-models --show-chats --resume-chat --show-chat --delete-chat --rename-chat"
+
     config_file="$(dirname "${BASH_SOURCE[0]}")/config/models.ini"
-    
+
     if [ -f "$config_file" ]; then
-        # Extrae las keys de la seccion [availables] de forma dinamica
         models=$(awk '/^\[availables\]/{flag=1; next} /^\[/{flag=0} flag && /=/ {print $1}' "$config_file")
     else
-        # Fallback por si acaso si no encuentra el archivo estático
         models="gemini-lite gemini-flash gemini-pro gpt-oss-120b gpt-oss-20b"
     fi
 
@@ -23,13 +20,20 @@ _feline_completions() {
             COMPREPLY=( $(compgen -W "${models}" -- "${cur}") )
             return 0
             ;;
-        --resume-chat|--show-chat)
+        --resume-chat|--show-chat|--delete-chat)
+            return 0
+            ;;
+        --rename-chat)
             return 0
             ;;
     esac
 
     if [[ "${cur}" == -* ]]; then
         COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+        return 0
+    fi
+
+    if [[ "${COMP_WORDS[COMP_CWORD-2]}" == "--rename-chat" ]]; then
         return 0
     fi
 }

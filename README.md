@@ -305,6 +305,8 @@ feline --purge
 | `--show-chat ID` | Muestra los mensajes de una conversación. |
 | `--resume-chat ID` | Reanuda una conversación guardada. |
 | `--purge` | Borra el historial local y los registros de chats. |
+| `--delete-chat ID` | Eliminar un chat. |
+| `--rename-chat ID NAME` | Renombrar un chat. |
 | `--help` | Muestra la ayuda. |
 
 Consulta todas las opciones con:

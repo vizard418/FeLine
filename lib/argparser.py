@@ -81,3 +81,17 @@ class Argparser(ArgumentParser):
             action="store_true",
             help="Show saved chat conversations.",
         )
+
+        self.add_argument(
+            "--delete-chat",
+            type=int,
+            metavar="ID",
+            help="Delete a saved conversation.",
+        )
+
+        self.add_argument(
+            "--rename-chat",
+            nargs=2,
+            metavar=("ID", "TITLE"),
+            help="Rename a saved conversation.",
+        )
