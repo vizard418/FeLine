@@ -17,6 +17,7 @@ def parse_commands(text: str) -> list[str]:
 
 def run_command(command: str, timeout: int = 30) -> str:
     """Execute a local shell command and return its output after user confirmation.
+
     Args:
         command: The shell command to execute locally.
         timeout: Maximum execution time in seconds.
@@ -32,16 +33,17 @@ def run_command(command: str, timeout: int = 30) -> str:
     result = subprocess.run(
         command,
         shell=True,
-        text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         timeout=timeout,
     )
-    if result.returncode:
-        output = result.stdout.strip()
-        raise RuntimeError(f"Command failed: {output}")
-    return result.stdout.strip()
 
+    output = result.stdout.decode("utf-8", errors="replace").strip()
+
+    if result.returncode:
+        raise RuntimeError(f"Command failed: {output}")
+
+    return output
 
 AVAILABLE_TOOLS = [
     run_command

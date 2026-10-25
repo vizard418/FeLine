@@ -16,24 +16,18 @@ class GeminiHandler:
                 temperature=0.3
             )
 
-            contents = [prompt]
+            # Usar chat en lugar de models.generate_content para evitar el warning
+            chat = self.client.chats.create(
+                model=model,
+                config=config
+            )
+
+            response = chat.send_message(prompt)
             max_iterations = 10
+            iteration = 0
 
-            for iteration in range(max_iterations + 1):
-                response = self.client.models.generate_content(
-                    model=model,
-                    contents=contents,
-                    config=config,
-                )
-
-                if not response.function_calls:
-                    return response.text if response.text else "Error: Model returned an empty response."
-
-                if iteration == max_iterations:
-                    return "Tool execution limit reached. Please refine your request."
-
-                contents.append(response.candidates[0].content)
-
+            while response.function_calls and iteration < max_iterations:
+                iteration += 1
                 for function_call in response.function_calls:
                     name = function_call.name
                     args = function_call.args
@@ -47,18 +41,17 @@ class GeminiHandler:
                     else:
                         tool_output = f"Unknown tool: {name}"
 
-                    contents.append(
-                        types.Content(
-                            role="tool",
-                            parts=[
-                                types.Part.from_function_response(
-                                    name=name,
-                                    response={"result": tool_output}
-                                )
-                            ]
+                    # Enviar la respuesta de la herramienta de vuelta a traves del chat
+                    response = chat.send_message(
+                        types.Part.from_function_response(
+                            name=name,
+                            response={"result": tool_output}
                         )
                     )
 
-            return "Tool execution limit reached."
+            if response.text:
+                return response.text
+            return "Error: Model returned an empty response."
+
         except Exception as e:
             return f"API Error: {str(e)}"
