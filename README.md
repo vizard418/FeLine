@@ -11,6 +11,8 @@
 
 *Combina comandos del sistema con la capacidad de análisis de un LLM, directamente desde la línea de comandos.*
 
+![Demo FeLine](https://i.postimg.cc/cLm9fJrS/Demo-Fe-Line.gif)
+
 </div>
 
 ---
@@ -307,6 +309,7 @@ feline --purge
 | `--purge` | Borra el historial local y los registros de chats. |
 | `--delete-chat ID` | Eliminar un chat. |
 | `--rename-chat ID NAME` | Renombrar un chat. |
+| `--scheme-config NAME` | Cambiar esquema de colores de UI. |
 | `--help` | Muestra la ayuda. |
 
 Consulta todas las opciones con:
