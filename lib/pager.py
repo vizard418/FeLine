@@ -2,14 +2,20 @@ import sys
 
 from prompt_toolkit import Application
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout import Layout, HSplit, ScrollablePane
+from prompt_toolkit.layout import HSplit, Layout, ScrollablePane
 from prompt_toolkit.layout.containers import Window
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.styles import Style
 
+from lib.themes import get_theme
+
 
 class Pager:
     """Muestra texto navegable y conserva la salida al salir."""
+
+    def __init__(self, scheme: str = "nord") -> None:
+        self.scheme = scheme
+        self.theme = get_theme(scheme)
 
     def show_text(self, text: str, title: str = "FeLine") -> None:
         if not text:
@@ -21,7 +27,6 @@ class Pager:
 
         bindings = KeyBindings()
         content_lines = max(1, len(text.splitlines()))
-
         pane = ScrollablePane(
             Window(
                 FormattedTextControl(text),
@@ -45,29 +50,21 @@ class Pager:
         @bindings.add("up")
         @bindings.add("k")
         def _scroll_up(event):
-            pane.vertical_scroll = max(
-                0, pane.vertical_scroll - 1
-            )
+            pane.vertical_scroll = max(0, pane.vertical_scroll - 1)
             event.app.invalidate()
 
         @bindings.add("down")
         @bindings.add("j")
         def _scroll_down(event):
-            pane.vertical_scroll = min(
-                content_lines, pane.vertical_scroll + 1
-            )
+            pane.vertical_scroll = min(content_lines, pane.vertical_scroll + 1)
             event.app.invalidate()
 
         @bindings.add("pageup")
         @bindings.add("b")
         @bindings.add("c-b")
         def _page_up(event):
-            page_size = max(
-                1, event.app.output.get_size().rows - 3
-            )
-            pane.vertical_scroll = max(
-                0, pane.vertical_scroll - page_size
-            )
+            page_size = max(1, event.app.output.get_size().rows - 3)
+            pane.vertical_scroll = max(0, pane.vertical_scroll - page_size)
             event.app.invalidate()
 
         @bindings.add("pagedown")
@@ -75,12 +72,8 @@ class Pager:
         @bindings.add("c-f")
         @bindings.add("space")
         def _page_down(event):
-            page_size = max(
-                1, event.app.output.get_size().rows - 3
-            )
-            pane.vertical_scroll = min(
-                content_lines, pane.vertical_scroll + page_size
-            )
+            page_size = max(1, event.app.output.get_size().rows - 3)
+            pane.vertical_scroll = min(content_lines, pane.vertical_scroll + page_size)
             event.app.invalidate()
 
         @bindings.add("g")
@@ -94,36 +87,30 @@ class Pager:
             event.app.invalidate()
 
         header = Window(
-            FormattedTextControl([
-                ("class:brand", f" ◆ {title} ")
-            ]),
+            FormattedTextControl([("class:brand", f" ◆ {title} ")]),
             height=1,
             style="class:header",
         )
-
         footer = Window(
             FormattedTextControl(
-                " ↑/k ↓/j scroll   PgUp/PgDn page   "
-                "g/G top/bottom   q close "
+                " ↑/k ↓/j scroll   PgUp/PgDn page   g/G top/bottom   q close "
             ),
             height=1,
             style="class:status",
         )
-
         app = Application(
             layout=Layout(HSplit([header, pane, footer])),
             key_bindings=bindings,
             full_screen=False,
             mouse_support=True,
             style=Style.from_dict({
-                "header": "bg:#202638",
-                "brand": "bold #9DB4FF",
-                "content": "#D8DEEA",
-                "status": "bg:#202638 #A0A8BA",
-                "scrollbar.background": "bg:#30384A",
-                "scrollbar.button": "bg:#7C9DFF",
+                "header": f"bg:{self.theme['header_bg']}",
+                "brand": self.theme["brand"],
+                "content": self.theme["content"],
+                "status": f"bg:{self.theme['status_bg']} {self.theme['status_fg']}",
+                "scrollbar.background": f"bg:{self.theme['scrollbar_bg']}",
+                "scrollbar.button": f"bg:{self.theme['scrollbar_button']}",
             }),
         )
-
         app.run()
         print(text)

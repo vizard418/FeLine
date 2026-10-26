@@ -2,6 +2,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 from configparser import ConfigParser
 
+from lib.themes import AVAILABLE_THEMES
+
 class Argparser(ArgumentParser):
     def __new__(cls, *args, **kwargs):
         base_dir = Path(__file__).resolve().parent.parent
@@ -63,6 +65,13 @@ class Argparser(ArgumentParser):
         )
 
         self.add_argument(
+            "--scheme-config",
+            choices=AVAILABLE_THEMES,
+            metavar="SCHEME",
+            help="Configure the default UI color scheme.",
+        )
+
+        self.add_argument(
             '--resume-chat',
             type=int,
             nargs='?',
@@ -95,3 +104,4 @@ class Argparser(ArgumentParser):
             metavar=("ID", "TITLE"),
             help="Rename a saved conversation.",
         )
+

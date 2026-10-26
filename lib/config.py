@@ -34,6 +34,7 @@ class Config:
                 "user_context": config_dir / "user_context.txt",
                 "instructions": config_dir / "instructions.txt",
                 "models_ini": config_dir / "models.ini",
+                "theme_ini": config_dir / "theme.ini",
             }
         elif os.sys.platform == "darwin":
             support = (
@@ -47,6 +48,7 @@ class Config:
                 "user_context": support / "user_context.txt",
                 "instructions": support / "instructions.txt",
                 "models_ini": support / "models.ini",
+                "theme_ini": support / "theme.ini",
             }
         else:
             xdg_data = Path(
@@ -68,6 +70,7 @@ class Config:
                 "user_context": config_dir / "user_context.txt",
                 "instructions": config_dir / "instructions.txt",
                 "models_ini": config_dir / "models.ini",
+                "theme_ini": config_dir / "theme.ini",
             }
 
     def load_config(self) -> configparser.ConfigParser:
@@ -129,3 +132,46 @@ class Config:
         """Obtiene el modelo por defecto desde la configuracion."""
         config = self.load_models_config()
         return config.get("models", "default", fallback="gemini-lite")
+
+    def get_theme_scheme(self) -> str:
+        """Obtiene el esquema guardado en el archivo theme.ini del usuario."""
+        from lib.themes import DEFAULT_THEME, AVAILABLE_THEMES
+
+        theme_path = self.app_dirs["theme_ini"]
+        config = configparser.ConfigParser()
+
+        if theme_path.exists():
+            config.read(theme_path, encoding="utf-8")
+        else:
+            config["theme"] = {"scheme": DEFAULT_THEME}
+            theme_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(theme_path, "w", encoding="utf-8") as file:
+                config.write(file)
+
+        scheme = config.get("theme", "scheme", fallback=DEFAULT_THEME).lower()
+        if scheme not in AVAILABLE_THEMES:
+            return DEFAULT_THEME
+        return scheme
+
+    def set_theme_scheme(self, scheme: str) -> None:
+        """Guarda el esquema visual seleccionado por el usuario."""
+        from lib.themes import AVAILABLE_THEMES
+
+        scheme = scheme.lower()
+        if scheme not in AVAILABLE_THEMES:
+            available = ", ".join(AVAILABLE_THEMES)
+            raise ValueError(f"Unknown theme '{scheme}'. Available themes: {available}")
+
+        theme_path = self.app_dirs["theme_ini"]
+        config = configparser.ConfigParser()
+        if theme_path.exists():
+            config.read(theme_path, encoding="utf-8")
+
+        if "theme" not in config:
+            config["theme"] = {}
+        config["theme"]["scheme"] = scheme
+
+        theme_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(theme_path, "w", encoding="utf-8") as file:
+            config.write(file)
+
