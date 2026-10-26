@@ -1,15 +1,17 @@
 import sys
+
 from prompt_toolkit import Application
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout import Layout, HSplit
+from prompt_toolkit.layout import Layout, HSplit, ScrollablePane
 from prompt_toolkit.layout.containers import Window
 from prompt_toolkit.layout.controls import FormattedTextControl
-from prompt_toolkit.layout import ScrollablePane
 from prompt_toolkit.styles import Style
 
+
 class Pager:
-    def show_text(self, text: str):
-        """Muestra texto navegable y lo deja en la terminal al salir."""
+    """Muestra texto navegable y conserva la salida al salir."""
+
+    def show_text(self, text: str, title: str = "FeLine") -> None:
         if not text:
             return
 
@@ -19,10 +21,12 @@ class Pager:
 
         bindings = KeyBindings()
         content_lines = max(1, len(text.splitlines()))
+
         pane = ScrollablePane(
             Window(
                 FormattedTextControl(text),
                 wrap_lines=True,
+                style="class:content",
             ),
             keep_cursor_visible=False,
             keep_focused_window_visible=False,
@@ -41,7 +45,9 @@ class Pager:
         @bindings.add("up")
         @bindings.add("k")
         def _scroll_up(event):
-            pane.vertical_scroll = max(0, pane.vertical_scroll - 1)
+            pane.vertical_scroll = max(
+                0, pane.vertical_scroll - 1
+            )
             event.app.invalidate()
 
         @bindings.add("down")
@@ -56,8 +62,12 @@ class Pager:
         @bindings.add("b")
         @bindings.add("c-b")
         def _page_up(event):
-            page_size = max(1, event.app.output.get_size().rows - 2)
-            pane.vertical_scroll = max(0, pane.vertical_scroll - page_size)
+            page_size = max(
+                1, event.app.output.get_size().rows - 3
+            )
+            pane.vertical_scroll = max(
+                0, pane.vertical_scroll - page_size
+            )
             event.app.invalidate()
 
         @bindings.add("pagedown")
@@ -65,23 +75,9 @@ class Pager:
         @bindings.add("c-f")
         @bindings.add("space")
         def _page_down(event):
-            page_size = max(1, event.app.output.get_size().rows - 2)
-            pane.vertical_scroll = min(
-                content_lines, pane.vertical_scroll + page_size
+            page_size = max(
+                1, event.app.output.get_size().rows - 3
             )
-            event.app.invalidate()
-
-        @bindings.add("u")
-        @bindings.add("c-u")
-        def _half_page_up(event):
-            page_size = max(1, (event.app.output.get_size().rows - 2) // 2)
-            pane.vertical_scroll = max(0, pane.vertical_scroll - page_size)
-            event.app.invalidate()
-
-        @bindings.add("d")
-        @bindings.add("c-d")
-        def _half_page_down(event):
-            page_size = max(1, (event.app.output.get_size().rows - 2) // 2)
             pane.vertical_scroll = min(
                 content_lines, pane.vertical_scroll + page_size
             )
@@ -97,20 +93,37 @@ class Pager:
             pane.vertical_scroll = content_lines
             event.app.invalidate()
 
+        header = Window(
+            FormattedTextControl([
+                ("class:brand", f" ◆ {title} ")
+            ]),
+            height=1,
+            style="class:header",
+        )
+
         footer = Window(
-            FormattedTextControl(" ↑/k, ↓/j scroll  PgUp/PgDn/Space page  g/G top/bottom  q quit "),
+            FormattedTextControl(
+                " ↑/k ↓/j scroll   PgUp/PgDn page   "
+                "g/G top/bottom   q close "
+            ),
             height=1,
             style="class:status",
         )
+
         app = Application(
-            layout=Layout(HSplit([pane, footer])),
+            layout=Layout(HSplit([header, pane, footer])),
             key_bindings=bindings,
             full_screen=False,
             mouse_support=True,
             style=Style.from_dict({
-                "scrollbar.background": "bg:#444444",
-                "status": "reverse",
+                "header": "bg:#202638",
+                "brand": "bold #9DB4FF",
+                "content": "#D8DEEA",
+                "status": "bg:#202638 #A0A8BA",
+                "scrollbar.background": "bg:#30384A",
+                "scrollbar.button": "bg:#7C9DFF",
             }),
         )
+
         app.run()
         print(text)
