@@ -16,7 +16,6 @@ class GeminiHandler:
                 temperature=0.3
             )
 
-            # Usar chat en lugar de models.generate_content para evitar el warning
             chat = self.client.chats.create(
                 model=model,
                 config=config
@@ -28,6 +27,7 @@ class GeminiHandler:
 
             while response.function_calls and iteration < max_iterations:
                 iteration += 1
+                parts = []
                 for function_call in response.function_calls:
                     name = function_call.name
                     args = function_call.args
@@ -41,13 +41,14 @@ class GeminiHandler:
                     else:
                         tool_output = f"Unknown tool: {name}"
 
-                    # Enviar la respuesta de la herramienta de vuelta a traves del chat
-                    response = chat.send_message(
+                    parts.append(
                         types.Part.from_function_response(
                             name=name,
                             response={"result": tool_output}
                         )
                     )
+
+                response = chat.send_message(parts)
 
             if response.text:
                 return response.text

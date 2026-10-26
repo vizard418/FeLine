@@ -71,9 +71,10 @@ class OpenAIHandler:
                         "tool_call_id": tool_call.id,
                         "role": "tool",
                         "name": "run_command",
-                        "content": tool_output,
+                        "content": str(tool_output)
                     })
 
-            return "Tool execution limit reached."
+            return "Error: Tool execution loop ended without final response."
+
         except Exception as e:
             return f"API Error: {str(e)}"
