@@ -20,7 +20,10 @@ class Application:
         chats_db_path = Path(paths["chats_db"])
 
         self.db = Database(chats_db_path)
-        self.ui = UI(self.history_path)
+
+        theme_scheme = self.config_manager.get_theme_scheme()
+        self.ui = UI(self.history_path, scheme=theme_scheme)
+
         self.engine = Engine()
         self.current_chat_id = None
 
@@ -32,6 +35,19 @@ class Application:
             self.config_manager.set_default_model(model_config)
             self.ui.print_info(f"Default model updated to '{self.args.model_config}'")
             return True
+        return False
+
+    def _handle_scheme_config(self) -> bool:
+        """Establece el tema visual predeterminado en la configuracion"""
+        if self.args.scheme_config:
+            scheme = self.args.scheme_config
+            try:
+                self.config_manager.set_theme_scheme(scheme)
+                self.ui.print_info(f"Default theme updated to '{scheme}'")
+                return True
+            except ValueError as e:
+                self.ui.print_error(str(e))
+                return True
         return False
 
     def _handle_purge(self) -> bool:
@@ -116,6 +132,7 @@ class Application:
 
     def run(self):
         if self._handle_model_config(): return # --model-config [model_name]
+        if self._handle_scheme_config(): return # --scheme-config [scheme]
         if self._handle_purge(): return # --purge
         if self._handle_delete_chat(): return # --delete-chat [chat_id]
         if self._handle_rename_chat():return # --rename-chat [chat_id] [chat_title]
