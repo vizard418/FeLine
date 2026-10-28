@@ -1,4 +1,5 @@
 import json
+
 from openai import OpenAI
 from lib.tools import run_command
 
@@ -12,7 +13,9 @@ class OpenAIHandler:
             base_url="https://api.groq.com/openai/v1",
         )
 
-    def generate(self, model: str, prompt: str) -> str:
+    def generate(
+        self, model: str, prompt: str, allow_tools: bool = True
+    ) -> str:
         try:
             tools = [
                 {
@@ -38,12 +41,16 @@ class OpenAIHandler:
             max_iterations = 10
 
             for iteration in range(max_iterations + 1):
-                response = self.client.chat.completions.create(
-                    model=model,
-                    messages=messages,
-                    tools=tools,
-                    tool_choice="auto",
-                )
+                request_args = {
+                    "model": model,
+                    "messages": messages,
+                }
+
+                if allow_tools:
+                    request_args["tools"] = tools
+                    request_args["tool_choice"] = "auto"
+
+                response = self.client.chat.completions.create(**request_args)
 
                 response_message = response.choices[0].message
 
@@ -71,10 +78,9 @@ class OpenAIHandler:
                         "tool_call_id": tool_call.id,
                         "role": "tool",
                         "name": "run_command",
-                        "content": str(tool_output)
+                        "content": tool_output,
                     })
 
-            return "Error: Tool execution loop ended without final response."
-
+            return "Tool execution limit reached."
         except Exception as e:
             return f"API Error: {str(e)}"

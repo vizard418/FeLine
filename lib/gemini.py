@@ -1,5 +1,6 @@
 from google import genai
 from google.genai import types
+
 from lib.tools import run_command, AVAILABLE_TOOLS
 
 
@@ -9,13 +10,18 @@ class GeminiHandler:
     def __init__(self, api_key: str):
         self.client = genai.Client(api_key=api_key)
 
-    def generate(self, model: str, prompt: str) -> str:
+    def generate(
+        self, model: str, prompt: str, allow_tools: bool = True
+    ) -> str:
         try:
-            config = types.GenerateContentConfig(
-                tools=AVAILABLE_TOOLS,
-                temperature=0.3
-            )
+            config_args = {"temperature": 0.3}
 
+            if allow_tools:
+                config_args["tools"] = AVAILABLE_TOOLS
+
+            config = types.GenerateContentConfig(**config_args)
+
+            # Usar chat en lugar de models.generate_content para evitar el warning
             chat = self.client.chats.create(
                 model=model,
                 config=config
@@ -27,7 +33,7 @@ class GeminiHandler:
 
             while response.function_calls and iteration < max_iterations:
                 iteration += 1
-                parts = []
+
                 for function_call in response.function_calls:
                     name = function_call.name
                     args = function_call.args
@@ -41,17 +47,17 @@ class GeminiHandler:
                     else:
                         tool_output = f"Unknown tool: {name}"
 
-                    parts.append(
+                    # Enviar la respuesta de la herramienta de vuelta a traves del chat
+                    response = chat.send_message(
                         types.Part.from_function_response(
                             name=name,
                             response={"result": tool_output}
                         )
                     )
 
-                response = chat.send_message(parts)
-
             if response.text:
                 return response.text
+
             return "Error: Model returned an empty response."
 
         except Exception as e:

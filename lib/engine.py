@@ -1,5 +1,6 @@
 import re
 from os import environ
+
 from lib.tools import parse_commands, run_command
 from lib.gemini import GeminiHandler
 from lib.openai import OpenAIHandler
@@ -13,6 +14,7 @@ class Engine:
         self.prompt_message = ""
         self.api_key = None
         self.context = ""
+        self.allow_function_calling = True
 
     def config_api_key(self) -> str | None:
         """Establece la api key correspondiente al modelo seleccionado."""
@@ -30,6 +32,10 @@ class Engine:
             return text
 
         commands = parse_commands(text)
+
+        # Evitar que el proveedor vuelva a ejecutar comandos explicitos
+        self.allow_function_calling = not bool(commands)
+
         processed_text = text
 
         for cmd in commands:
@@ -53,10 +59,18 @@ class Engine:
         """Delega la generacion de respuesta al manejador correspondiente."""
         if "gemini" in self.model:
             handler = GeminiHandler(self.api_key)
-            return handler.generate(self.model, prompt)
+            return handler.generate(
+                self.model,
+                prompt,
+                allow_tools=self.allow_function_calling,
+            )
 
         if "gpt" in self.model or "openai" in self.model:
             handler = OpenAIHandler(self.api_key)
-            return handler.generate(self.model, prompt)
+            return handler.generate(
+                self.model,
+                prompt,
+                allow_tools=self.allow_function_calling,
+            )
 
         raise ValueError(f"Model not supported: {self.model}")

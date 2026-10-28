@@ -20,8 +20,7 @@ class Application:
         chats_db_path = Path(paths["chats_db"])
 
         self.db = Database(chats_db_path)
-        self.scheme = self.config_manager.get_theme_scheme()
-        self.ui = UI(self.history_path, scheme=self.scheme)
+        self.ui = UI(self.history_path)
         self.engine = Engine()
         self.current_chat_id = None
 
@@ -34,17 +33,6 @@ class Application:
             self.ui.print_info(f"Default model updated to '{self.args.model_config}'")
             return True
         return False
-
-    def _handle_scheme_config(self) -> bool:
-        """Guarda el esquema visual predeterminado del usuario."""
-        if not self.args.scheme_config:
-            return False
-
-        self.config_manager.set_theme_scheme(self.args.scheme_config)
-        self.ui.print_info(
-            f"Color scheme updated to '{self.args.scheme_config}'."
-        )
-        return True
 
     def _handle_purge(self) -> bool:
         """Limpieza de datos de usuario cache y base de datos."""
@@ -128,7 +116,6 @@ class Application:
 
     def run(self):
         if self._handle_model_config(): return # --model-config [model_name]
-        if self._handle_scheme_config(): return # --scheme-config [scheme]
         if self._handle_purge(): return # --purge
         if self._handle_delete_chat(): return # --delete-chat [chat_id]
         if self._handle_rename_chat():return # --rename-chat [chat_id] [chat_title]
@@ -164,10 +151,6 @@ class Application:
                 if not user_message.strip():
                     break
 
-                # Procesar mensaje y comandos
-                self.engine.prompt_message = self.engine.build_prompt_message(user_message)
-
-
                 # Crear chat nuevo si no existe
                 if not self.current_chat_id:
                     title = user_message[:30].strip()
@@ -179,7 +162,7 @@ class Application:
                 # Cargar contexto antes de agregar el mensaje actual
                 self._update_context()
 
-                # Procesar mensaje y comandos
+                # Procesar mensaje y comandos una sola vez
                 self.engine.prompt_message = self.engine.build_prompt_message(user_message)
 
                 # Guardar mensaje del usuario
@@ -251,4 +234,3 @@ class Application:
             context.append(f"{msg['role']}: {content}")
 
         self.engine.context = "\n".join(context)
-

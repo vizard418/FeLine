@@ -113,4 +113,3 @@ class Pager:
             }),
         )
         app.run()
-        print(text)
