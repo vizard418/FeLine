@@ -12,7 +12,7 @@ _feline_completions() {
     if [ -f "$config_file" ]; then
         models=$(awk '/^\[availables\]/{flag=1; next} /^\[/{flag=0} flag && /=/ {print $1}' "$config_file")
     else
-        models="gemini-lite gemini-flash gemini-pro gpt-oss-120b gpt-oss-20b"
+        models="gemini-lite gemini-flash gemini-pro gpt-oss-120b gpt-oss-20b qwen-coder"
     fi
 
     schemes="gruvbox nord"

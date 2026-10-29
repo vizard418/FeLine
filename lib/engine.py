@@ -4,6 +4,7 @@ from os import environ
 from lib.tools import parse_commands, run_command
 from lib.gemini import GeminiHandler
 from lib.openai import OpenAIHandler
+from lib.ollama import OllamaHandler
 
 
 class Engine:
@@ -65,12 +66,19 @@ class Engine:
                 allow_tools=self.allow_function_calling,
             )
 
-        if "gpt" in self.model or "openai" in self.model:
+        elif "gpt" in self.model or "openai" in self.model:
             handler = OpenAIHandler(self.api_key)
             return handler.generate(
                 self.model,
                 prompt,
                 allow_tools=self.allow_function_calling,
+            )
+
+        elif any(k in self.model for k in ["llama", "qwen"]):
+            handler = OllamaHandler(self.api_key)
+            return handler.generate(
+                self.model,
+                prompt,
             )
 
         raise ValueError(f"Model not supported: {self.model}")

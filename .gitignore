@@ -7,3 +7,4 @@ config/config.ini
 .pytest_cache/
 env/
 dev/
+planning/

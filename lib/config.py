@@ -97,41 +97,37 @@ class Config:
             )
 
     def load_models_config(self) -> configparser.ConfigParser:
-        """Carga models.ini del usuario o lo replica desde el proyecto."""
+        """Carga models.ini exclusivamente desde el proyecto."""
         project_models_path = self.base_dir / "config" / "models.ini"
-        user_models_path = self.app_dirs["models_ini"]
-
-        if not user_models_path.exists() and project_models_path.exists():
-            content = project_models_path.read_text(encoding="utf-8")
-            user_models_path.write_text(content, encoding="utf-8")
-
         config = configparser.ConfigParser()
-        target_path = (
-            user_models_path
-            if user_models_path.exists()
-            else project_models_path
-        )
-        config.read(target_path, encoding="utf-8")
+        if project_models_path.exists():
+            config.read(project_models_path, encoding="utf-8")
         return config
 
     def set_default_model(self, model_name: str) -> None:
-        """Actualiza el modelo por defecto en el models.ini del usuario."""
+        """Actualiza el modelo por defecto en el archivo del usuario."""
         user_models_path = self.app_dirs["models_ini"]
-        config = self.load_models_config()
+        config = configparser.ConfigParser()
+        if user_models_path.exists():
+            config.read(user_models_path, encoding="utf-8")
 
         if "models" not in config:
             config["models"] = {}
 
         config["models"]["default"] = model_name
 
+        user_models_path.parent.mkdir(parents=True, exist_ok=True)
         with open(user_models_path, "w", encoding="utf-8") as f:
             config.write(f)
 
-
     def get_default_model(self) -> str:
-        """Obtiene el modelo por defecto desde la configuracion."""
-        config = self.load_models_config()
-        return config.get("models", "default", fallback="gemini-lite")
+        """Obtiene el modelo por defecto desde la configuracion de usuario."""
+        user_models_path = self.app_dirs["models_ini"]
+        config = configparser.ConfigParser()
+        if user_models_path.exists():
+            config.read(user_models_path, encoding="utf-8")
+            return config.get("models", "default", fallback="gemini-lite")
+        return "gemini-lite"
 
     def get_theme_scheme(self) -> str:
         """Obtiene el esquema guardado en el archivo theme.ini del usuario."""
@@ -174,4 +170,3 @@ class Config:
         theme_path.parent.mkdir(parents=True, exist_ok=True)
         with open(theme_path, "w", encoding="utf-8") as file:
             config.write(file)
-
