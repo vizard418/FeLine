@@ -2,8 +2,7 @@ import sys
 
 from prompt_toolkit import Application
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout import HSplit, Layout, ScrollablePane
-from prompt_toolkit.layout.containers import Window
+from prompt_toolkit.layout import HSplit, Layout, ScrollablePane, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.styles import Style
 
@@ -27,16 +26,22 @@ class Pager:
 
         bindings = KeyBindings()
         content_lines = max(1, len(text.splitlines()))
+
+        content_window = Window(
+            FormattedTextControl(text),
+            wrap_lines=True,
+            style="class:content",
+        )
+
         pane = ScrollablePane(
-            Window(
-                FormattedTextControl(text),
-                wrap_lines=True,
-                style="class:content",
-            ),
+            content_window,
+            height=20,
             keep_cursor_visible=False,
             keep_focused_window_visible=False,
             show_scrollbar=True,
         )
+
+        pane.vertical_scroll = 0
 
         @bindings.add("q")
         @bindings.add("escape")
@@ -98,11 +103,13 @@ class Pager:
             height=1,
             style="class:status",
         )
+
         app = Application(
-            layout=Layout(HSplit([header, pane, footer])),
+            layout=Layout(HSplit([header, pane, footer]), focused_element=content_window),
             key_bindings=bindings,
             full_screen=False,
             mouse_support=True,
+            erase_when_done=False,
             style=Style.from_dict({
                 "header": f"bg:{self.theme['header_bg']}",
                 "brand": self.theme["brand"],
