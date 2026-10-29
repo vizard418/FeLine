@@ -180,7 +180,11 @@ class Application:
                 self._update_context()
 
                 # Procesar mensaje y comandos una sola vez
-                self.engine.prompt_message = self.engine.build_prompt_message(user_message)
+                try:
+                    self.engine.prompt_message = self.engine.build_prompt_message(user_message)
+                except RuntimeError as e:
+                    self.ui.print_error(str(e))
+                    continue
 
                 # Guardar mensaje del usuario
                 self.db.add_message(
@@ -209,9 +213,13 @@ class Application:
 
             self._update_context()
 
-            self.engine.prompt_message = self.engine.build_prompt_message(
-                self.args.message
-            )
+            try:
+                self.engine.prompt_message = self.engine.build_prompt_message(
+                    self.args.message
+                )
+            except RuntimeError as e:
+                self.ui.print_error(str(e))
+                return
 
             self.db.add_message(
                 self.current_chat_id,
