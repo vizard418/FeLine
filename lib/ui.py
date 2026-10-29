@@ -1,8 +1,11 @@
 from pathlib import Path
+from re import search
 
 from prompt_toolkit import prompt, print_formatted_text
 from prompt_toolkit.formatted_text import ANSI, HTML
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit.completion import Completer, PathCompleter
+from prompt_toolkit.document import Document
 
 from lib.pager import Pager
 from lib.themes import get_theme, get_ui_style
@@ -70,12 +73,17 @@ class UI:
         lines = []
         empty_lines = 0
 
+        # Habilitar autocompletado de rutas
+        path_completer = HybridPathCompleter()
+
         while True:
             try:
                 line = prompt(
                     ANSI("\033[1m❯ \033[0m"),
                     history=self.filehistory,
                     style=self.style,
+                    completer=path_completer,
+                    complete_while_typing=True,
                     prompt_continuation="  ",
                 )
             except (KeyboardInterrupt, EOFError):
@@ -130,3 +138,42 @@ class UI:
             .replace("<", "&lt;")
             .replace(">", "&gt;")
         )
+
+class HybridPathCompleter(Completer):
+    """Permite autocompletar rutas de archivos y directorios de forma hibrida."""
+
+    def __init__(self):
+        self.path_completer = PathCompleter(expanduser=True)
+
+    def get_completions(self, document, complete_event):
+        text_before_cursor = document.text_before_cursor
+
+        # Detectar si el cursor se encuentra dentro de un bloque @cmd(...) o @command(...)
+        if "@cmd(" in text_before_cursor or "@command(" in text_before_cursor:
+            last_cmd_idx = max(
+                text_before_cursor.rfind("@cmd("),
+                text_before_cursor.rfind("@command("),
+            )
+            open_paren_idx = text_before_cursor.find("(", last_cmd_idx)
+
+            if open_paren_idx != -1 and text_before_cursor.rfind(")") < open_paren_idx:
+                # Extraer todo el contenido escrito dentro del comando hasta el cursor
+                inner_text = text_before_cursor[open_paren_idx + 1 :]
+
+                # Aislar la ultima palabra o argumento separado por espacios u operadores (ej. pipes)
+                tokens = search(r"([^\s]+)$", inner_text)
+                if tokens:
+                    path_part = tokens.group(1)
+                    temp_doc = Document(path_part, cursor_position=len(path_part))
+
+                    for comp in self.path_completer.get_completions(temp_doc, complete_event):
+                        yield comp
+                return
+
+        # Aplicar comportamiento por defecto para autocompletar rutas directas
+        match = search(r"[~\/\.\w\-]+$", text_before_cursor)
+        if match:
+            word = match.group(0)
+            if word.startswith("~") or word.startswith("/") or word.startswith("./"):
+                for comp in self.path_completer.get_completions(document, complete_event):
+                    yield comp
